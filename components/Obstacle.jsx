@@ -2,6 +2,8 @@ import React from 'react';
 import { View } from 'react-native';
 
 const Obstacle = ({ body, size, camera }) => {
+    if (!body || !camera) return null;
+
     const width = size[0];
     const height = size[1];
     const x = body.position.x - width/2 - (camera?.position.x || 0);
@@ -16,7 +18,9 @@ const Obstacle = ({ body, size, camera }) => {
                 width: width,
                 height: height,
                 backgroundColor: 'purple',
-                borderRadius: 5
+                borderRadius: 5,
+                zIndex: 2,
+                opacity: 1
             }}
         />
     );

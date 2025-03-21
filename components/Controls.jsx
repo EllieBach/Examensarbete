@@ -1,35 +1,40 @@
 import Matter from 'matter-js';
 import { Dimensions } from 'react-native';
 
-const JUMP_FORCE = -13;
-const RUN_SPEED = 5;
-const GROUND_THRESHOLD = 1; // Increased threshold
-const WINDOW_HEIGHT = Dimensions.get('window').height;
+const JUMP_FORCE = -20;
+const RUN_SPEED = 8;
+const GROUND_THRESHOLD = 0.8; // Increased threshold for better ground detection
+const MAX_FALL_SPEED = 25;
+const FLOOR_Y = Dimensions.get('window').height - 80; // Reference point for ground
+
+const VELOCITY_CACHE = {
+    x: RUN_SPEED,
+    y: 0
+};
 
 const controls = (entities, { events }) => {
     const character = entities.character?.body;
-    const floor = entities['collision-floor']?.body;
-    if (!character || !floor) return entities;
+    if (!character) return entities;
 
-    // Maintain horizontal velocity
+    // Improved ground detection
+    const isGrounded = 
+        character.position.y >= FLOOR_Y - 10 && 
+        character.velocity.y >= -0.1;
+
+    // Maintain consistent horizontal speed
     Matter.Body.setVelocity(character, {
         x: RUN_SPEED,
-        y: character.velocity.y
+        y: Math.min(character.velocity.y, MAX_FALL_SPEED)
     });
 
-    // Handle jump events with better collision detection
-    if (events.length) {
+    // Handle jump events with better ground detection
+    if (events.length && isGrounded) {
         events.forEach(event => {
             if (event.type === "jump") {
-                const collision = Matter.Collision.collides(character, floor);
-                const isNearGround = character.position.y >= WINDOW_HEIGHT - 150;
-
-                if (collision || isNearGround) {
-                    Matter.Body.setVelocity(character, {
-                        x: RUN_SPEED,
-                        y: JUMP_FORCE
-                    });
-                }
+                Matter.Body.setVelocity(character, {
+                    x: RUN_SPEED,
+                    y: JUMP_FORCE
+                });
             }
         });
     }

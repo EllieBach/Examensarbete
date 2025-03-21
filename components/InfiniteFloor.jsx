@@ -5,7 +5,7 @@ const screenWidth = Dimensions.get('window').width;
 const FLOOR_HEIGHT = 60;
 const SEGMENTS = 4; // Increased number of segments
 
-const InfiniteFloor = ({ camera }) => {
+const InfiniteFloor = React.memo(({ camera }) => {
     const [floors, setFloors] = useState(
         Array.from({ length: SEGMENTS }, (_, i) => ({
             key: i,
@@ -14,30 +14,27 @@ const InfiniteFloor = ({ camera }) => {
     );
 
     useEffect(() => {
+        let frameId;
         const updateFloors = () => {
             const cameraX = camera?.position.x || 0;
             
             setFloors(prevFloors => {
-                return prevFloors.map(floor => {
+                const newPositions = prevFloors.map(floor => {
                     let position = floor.position - cameraX;
-                    
-                    // Recycle floor segments
-                    while (position < -screenWidth * 1.5) {
+                    while (position < -screenWidth) {
                         position += screenWidth * SEGMENTS;
                     }
-                    
-                    return {
-                        ...floor,
-                        position
-                    };
-                }).sort((a, b) => a.position - b.position);
+                    return { ...floor, position };
+                });
+
+                return newPositions;
             });
 
-            requestAnimationFrame(updateFloors);
+            frameId = requestAnimationFrame(updateFloors);
         };
 
-        const animationId = requestAnimationFrame(updateFloors);
-        return () => cancelAnimationFrame(animationId);
+        frameId = requestAnimationFrame(updateFloors);
+        return () => cancelAnimationFrame(frameId);
     }, [camera]);
 
     return (
@@ -56,7 +53,7 @@ const InfiniteFloor = ({ camera }) => {
             ))}
         </>
     );
-};
+});
 
 const styles = StyleSheet.create({
     floor: {

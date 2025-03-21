@@ -23,6 +23,7 @@ import InfiniteFloor from './InfiniteFloor';
 export default function GameScreen({ navigation }) {
   const [isPaused, setIsPaused] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);  // Add this state
+  const [score, setScore] = useState(0);  // Add score state
   const gameEngine = useRef(null); // Reference to GameEngine
   const screenWidth = Dimensions.get("window").width;
   const screenHeight = Dimensions.get("window").height;
@@ -30,9 +31,11 @@ export default function GameScreen({ navigation }) {
   // Initialize Matter.js engine with better physics settings
   const engine = Matter.Engine.create({
     enableSleeping: false,
+    constraintIterations: 4,
+    velocityIterations: 8
   });
   const world = engine.world;
-  engine.world.gravity.y = 2; // Increased from 1.5 for faster falls
+  engine.world.gravity.y = 2.8;
 
   // Make character with adjusted physics
   const character = Matter.Bodies.rectangle(
@@ -41,16 +44,16 @@ export default function GameScreen({ navigation }) {
     50,
     50,
     {
-      restitution: 0,
-      friction: 0.1,
-      frictionAir: 0.002, // Increased air friction slightly
-      mass: 1.5,        // Increased mass for faster falls
+      restitution: 0.1, // Added small bounce
+      friction: 0.2,
+      frictionAir: 0.0008,
+      mass: 0.8,
       label: 'character',
       inertia: Infinity,
       collisionFilter: {
         group: -1,
         category: 0x0002,
-        mask: 0x0001
+        mask: 0x0005  // Updated to collide with floor (0x0001) and obstacles (0x0004)
       }
     }
   );
@@ -138,13 +141,20 @@ export default function GameScreen({ navigation }) {
     if (e.type === "game-over") {
       setIsGameOver(true);  // Set game over state
       console.log("Game Over triggered!");
-      navigation.navigate("GameOver");
+      navigation.navigate("GameOver", { finalScore: score });
+    } else if (e.type === "score") {
+      setScore(prev => prev + 1);
     }
   };
 
   return (
     <TouchableWithoutFeedback onPress={handleJump}>
       <View style={styles.container}>
+        {/* Score Display */}
+        <View style={styles.scoreContainer}>
+          <Text style={styles.scoreText}>{score}</Text>
+        </View>
+        
         {/* Pause Button */}
         <TouchableOpacity
           onPress={handlePause}
@@ -254,5 +264,19 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0
-  }
+  },
+  scoreContainer: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    zIndex: 10,
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 5,
+  },
+  scoreText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000',
+  },
 });
