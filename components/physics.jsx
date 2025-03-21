@@ -1,18 +1,58 @@
 import Matter from 'matter-js';
 import { Dimensions } from 'react-native';
 import Obstacle from './Obstacle';
+import Platform from './Platform';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 const OBSTACLE_SPEED = 8;
+const PLATFORM_WIDTH = windowWidth;
+const PLATFORM_HEIGHT = 60;
 
 const Physics = (entities, { time }) => {
     const { physics, character } = entities;
     if (!physics?.engine || !character?.body) return entities;
 
-    const world = physics.world; 
-
+    const world = physics.engine.world;
     Matter.Engine.update(physics.engine, 16.667);
+
+    // Ensure collision platform exists and follows character properly
+    if (!entities['collision-floor']) {
+        const platform = Matter.Bodies.rectangle(
+            0,
+            windowHeight - 30,
+            windowWidth * 10, // Much wider collision floor
+            PLATFORM_HEIGHT,
+            {
+                isStatic: true,
+                friction: 1,
+                label: 'floor',
+                collisionFilter: {
+                    category: 0x0001,
+                    mask: 0x0002
+                },
+                chamfer: { radius: 0 }, // Sharp edges for better collision
+                slop: 0.3
+            }
+        );
+        Matter.World.add(world, [platform]);
+        entities['collision-floor'] = {
+            body: platform,
+            lastCharacterX: character.body.position.x
+        };
+    }
+
+    // Track character movement and update floor position
+    const floor = entities['collision-floor'];
+    const characterX = character.body.position.x;
+    
+    if (Math.abs(characterX - floor.lastCharacterX) > windowWidth) {
+        Matter.Body.setPosition(floor.body, {
+            x: characterX,
+            y: windowHeight - 30
+        });
+        floor.lastCharacterX = characterX;
+    }
 
     // Check if character has fallen off screen
     if (character.body.position.y > Dimensions.get('window').height + 100) {

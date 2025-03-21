@@ -18,6 +18,7 @@ import Obstacle from './Obstacle';
 import CameraSystem from './CameraSystem';
 import Platform from './Platform'; // Add this import
 import Background from './Background'; // Add this import
+import InfiniteFloor from './InfiniteFloor';
 
 export default function GameScreen({ navigation }) {
   const [isPaused, setIsPaused] = useState(false);
@@ -31,28 +32,9 @@ export default function GameScreen({ navigation }) {
     enableSleeping: false,
   });
   const world = engine.world;
-  engine.world.gravity.y = 0.9; // Adjusted gravity
+  engine.world.gravity.y = 2; // Increased from 1.5 for faster falls
 
-  // Make floor with better friction
-  const floor = Matter.Bodies.rectangle(
-    screenWidth / 2,
-    screenHeight - 30,
-    screenWidth * 10,
-    60,
-    { 
-      isStatic: true,
-      friction: 1,
-      restitution: 0,
-      label: 'floor',
-      collisionFilter: {
-        group: 1,
-        category: 0x0001,
-        mask: 0x0002
-      }
-    }
-  );
-
-  // Make character with better jump physics
+  // Make character with adjusted physics
   const character = Matter.Bodies.rectangle(
     screenWidth / 3,
     screenHeight - 100,
@@ -61,8 +43,8 @@ export default function GameScreen({ navigation }) {
     {
       restitution: 0,
       friction: 0.1,
-      frictionAir: 0,
-      mass: 1,
+      frictionAir: 0.002, // Increased air friction slightly
+      mass: 1.5,        // Increased mass for faster falls
       label: 'character',
       inertia: Infinity,
       collisionFilter: {
@@ -79,8 +61,24 @@ export default function GameScreen({ navigation }) {
   // Ensure initial velocity
   Matter.Body.setVelocity(character, { x: 5, y: 0 });
 
-  // Add this AFTER creating character and floor
-  Matter.World.add(world, [character, floor]); // Use world variable here
+  // Create initial platform
+  const initialPlatform = Matter.Bodies.rectangle(
+    0,  // Start at x=0
+    screenHeight - 30,
+    screenWidth * 2,  // Make initial platform wider
+    60,
+    {
+      isStatic: true,
+      friction: 1,
+      label: 'floor',
+      collisionFilter: {
+        category: 0x0001,
+        mask: 0x0002
+      }
+    }
+  );
+
+  Matter.World.add(world, [character, initialPlatform]);
 
   // Create camera first, with initial position
   const camera = { position: { x: 0, y: 0 } };
@@ -92,13 +90,10 @@ export default function GameScreen({ navigation }) {
       camera: camera,
       zIndex: 0  // Draw first
     },
-    floor: { 
-      body: floor, 
-      size: [screenWidth * 10, 60], // Match floor body size
-      color: 'green',
-      renderer: Platform,
+    floor: {
+      renderer: InfiniteFloor,
       camera: camera,
-      zIndex: 1  // Draw second
+      zIndex: 1
     },
     character: {
       body: character,

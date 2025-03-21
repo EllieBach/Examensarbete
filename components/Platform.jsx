@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 
-export default function Platform({ body, size, camera, zIndex = 1 }) {
+export default function Platform({ body, size, camera }) {
     if (!body || !camera) return null;
     
     const width = size[0];
@@ -15,11 +15,12 @@ export default function Platform({ body, size, camera, zIndex = 1 }) {
                 position: 'absolute',
                 left: x,
                 top: y,
-                width: width,
+                width: width + 2, // Slight overlap to prevent gaps
                 height: height,
                 backgroundColor: 'green',
-                zIndex: zIndex,
-                opacity: 0.8  // Make it slightly transparent to see background
+                zIndex: 1,
+                borderWidth: 1,
+                borderColor: 'rgba(0,0,0,0.1)'
             }}
         />
     );

@@ -1,16 +1,23 @@
 import Matter from 'matter-js';
 import { Dimensions } from 'react-native';
 
-const CameraSystem = (entities, { time }) => {
-    const windowWidth = Dimensions.get('window').width;
+const LERP_FACTOR = 0.08; // Reduced for smoother movement
+const TARGET_OFFSET = Dimensions.get('window').width / 3;
+
+const CameraSystem = (entities) => {
+    const character = entities.character;
+    const camera = entities.camera;
     
-    if (!entities.character?.body || !entities.camera) return entities;
-
-    const character = entities.character.body;
-
-    // Only update camera position
-    entities.camera.position.x = character.position.x - windowWidth / 3;
-
+    if (character && camera) {
+        const targetX = character.body.position.x - TARGET_OFFSET;
+        const dx = targetX - camera.position.x;
+        
+        // Apply smoother lerping with minimum movement threshold
+        if (Math.abs(dx) > 0.01) {
+            camera.position.x += dx * LERP_FACTOR;
+        }
+    }
+    
     return entities;
 };
 
