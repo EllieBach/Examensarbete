@@ -21,4 +21,5 @@ const CameraSystem = (entities) => {
     return entities;
 };
 
-export default CameraSystem;
+// Change to named export
+export { CameraSystem };

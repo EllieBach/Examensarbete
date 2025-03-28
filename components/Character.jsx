@@ -1,10 +1,10 @@
 import React from 'react';
 import { View } from 'react-native';
 
-const Character = React.memo(({ body, size, camera }) => {
+const Character = ({ body, size, camera }) => {
     if (!body || !camera) return null;
     
-    const x = Math.round(body.position.x - size[0]/2 - (camera?.position?.x || 0));
+    const x = Math.round(body.position.x - size[0]/2 - camera.position.x);
     const y = Math.round(body.position.y - size[1]/2);
 
     return (
@@ -17,14 +17,10 @@ const Character = React.memo(({ body, size, camera }) => {
                 height: size[1],
                 backgroundColor: 'rgb(128, 13, 13)',
                 borderRadius: 5,
-                zIndex: 1
+                zIndex: 999  // Ensure character is always on top
             }}
         />
     );
-}, (prev, next) => {
-    return Math.round(prev.body.position.x) === Math.round(next.body.position.x) &&
-           Math.round(prev.body.position.y) === Math.round(next.body.position.y) &&
-           prev.camera.position.x === next.camera.position.x;
-});
+};
 
 export default Character;

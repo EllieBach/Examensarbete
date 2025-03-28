@@ -1,11 +1,18 @@
 import Matter from 'matter-js';
 
-const RUN_SPEED = 4;
+function controls(entities, { touches, dispatch }) {
+    const character = entities.character;
 
-const controls = (entities) => {
-    const character = entities.character?.body;
-    if (!character) return entities;
+    if (character?.body) {
+        touches.forEach(t => {
+            if (t.type === 'press') {
+                dispatch({ type: 'jump' });
+                console.log('Jump dispatched');
+            }
+        });
+    }
+    
     return entities;
-};
+}
 
 export default controls;

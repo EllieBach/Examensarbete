@@ -14,11 +14,19 @@ import controls from "./Controls";
 import Matter from "matter-js"; 
 import Character from "./Character"; 
 import Physics from './physics';
-import Obstacle from './Obstacle';
-import CameraSystem from './CameraSystem';
+import { CameraSystem } from './CameraSystem';
 import Platform from './Platform'; 
 import Background from './Background'; 
 import InfiniteFloor from './InfiniteFloor';
+import Obstacle from './Obstacle';  // Make sure this is imported
+import Spike from './Spike';  // Add Spike import
+
+const gameSystem = (entities, { time, dispatch, touches, events }) => {
+  const updatedEntities = Physics(entities, { time, events });
+  controls(updatedEntities, { touches, dispatch });
+  CameraSystem(updatedEntities);
+  return updatedEntities;
+};
 
 export default function GameScreen({ navigation }) {
   const [isPaused, setIsPaused] = useState(false);
@@ -45,11 +53,9 @@ export default function GameScreen({ navigation }) {
 
   const engine = Matter.Engine.create({
     enableSleeping: false,
-    constraintIterations: 4,
-    velocityIterations: 6
   });
   const world = engine.world;
-  engine.world.gravity.y = 0.8;  // Reduced gravity
+  world.gravity.y = 0;  // We'll handle gravity manually
 
   const platformY = screenHeight - 30;
   const initialPlatform = Matter.Bodies.rectangle(
@@ -72,20 +78,20 @@ export default function GameScreen({ navigation }) {
 
   const character = Matter.Bodies.rectangle(
     screenWidth / 3,
-    screenHeight - 65,
+    screenHeight - 85,
     50,
     50,
     {
-      restitution: 0,
       friction: 0,
       frictionAir: 0,
+      restitution: 0,
+      mass: 1,
       density: 0.001,
-      mass: 0.5,  // Reduced mass
+      inertia: Infinity,
       label: 'character',
-      sleepThreshold: Infinity,  // Prevent sleeping
       collisionFilter: {
         category: 0x0002,
-        mask: 0xFFFF
+        mask: 0x0001
       }
     }
   );
@@ -93,6 +99,12 @@ export default function GameScreen({ navigation }) {
   // Ensure character stays upright
   Matter.Body.setInertia(character, Infinity);
   Matter.Body.setAngle(character, 0);
+
+  // Set initial velocity
+  Matter.Body.setVelocity(character, {
+    x: 5,
+    y: 0
+  });
 
   // Clean up physics engine on unmount
   useEffect(() => {
@@ -126,13 +138,15 @@ export default function GameScreen({ navigation }) {
       isGrounded: true,  // Add initial grounded state
       renderer: Character,
       camera: camera,
-      zIndex: 2  // Draw last
+      zIndex: 3  // Increased zIndex to ensure visibility
     },
     camera: camera,
     physics: { 
       engine: engine, 
       world: world, 
-      gameEngine: gameEngine 
+      gameEngine: gameEngine,
+      lastSpawnTime: 0,  // Add this for obstacle spawning
+      obstacleCount: 0   // Add this for obstacle tracking
     }
   };
 
@@ -163,9 +177,12 @@ export default function GameScreen({ navigation }) {
 
   const onEvent = (e) => {
     if (e.type === "game-over") {
-      setIsGameOver(true);  // Set game over state
-      console.log("Game Over triggered!");
-      navigation.navigate("GameOver", { finalScore: score });
+      setIsGameOver(true);
+      console.log("Game Over triggered with score:", score);
+      navigation.navigate("GameOver", { 
+        finalScore: score,
+        fromGame: true
+      });
     } else if (e.type === "score") {
       setScore(prev => prev + 1);
     }
@@ -194,8 +211,8 @@ export default function GameScreen({ navigation }) {
         {/* Game Engine */}
         <GameEngine
           ref={gameEngine}
-          systems={[controls, Physics, CameraSystem]} 
-          entities={entities} 
+          systems={[gameSystem]}
+          entities={entities}
           running={!isPaused && !isGameOver}  // Stop game engine on game over
           onEvent={onEvent}
           style={styles.gameEngine}
