@@ -13,10 +13,9 @@ export default function Platform({ body, size, camera }) {
             style={{
                 position: 'absolute',
                 left: x,
-                bottom: -50, // Extend below screen bottom
                 width: width + 100,
-                height: screenHeight * 0.3, // Increase height to 30% of screen
-                backgroundColor: 'green',
+
+                backgroundColor: 'rgb(0, 126, 42)',
                 zIndex: 1,
                 borderWidth: 1,
                 borderColor: 'rgb(0, 126, 42)'

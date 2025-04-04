@@ -7,7 +7,7 @@ import GameOverScreen from './components/GameOverScreen';
 
 import React from 'react';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { useEffect } from 'react';
+  import { useEffect } from 'react';
 
 const Stack = createStackNavigator();
 
