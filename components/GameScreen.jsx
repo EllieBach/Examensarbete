@@ -18,9 +18,10 @@ import { CameraSystem } from './CameraSystem';
 import SpikePatternSystem from './SpikePatternSystem';
 import Background from './Background'; 
 import InfiniteFloor from './InfiniteFloor';
-
+import JumpSystem from './JumpSystem';
 
 const gameSystem = (entities, { time, dispatch, touches, events }) => {
+  JumpSystem(entities, { events });
   const updatedEntities = Physics(entities, { time, events });
   controls(updatedEntities, { touches, dispatch });
   SpikePatternSystem(updatedEntities, { time, dispatch });
@@ -55,13 +56,13 @@ export default function GameScreen({ navigation }) {
     enableSleeping: false,
   });
   const world = engine.world;
-  //.gravity.y = 0;  // We'll handle gravity manually
+  
 
   const platformY = screenHeight - 30;
   const initialPlatform = Matter.Bodies.rectangle(
     screenWidth / 2,
     platformY,
-    screenWidth * 30, 
+    screenWidth * 100, // Much wider platform
     100,
     {
       isStatic: true,

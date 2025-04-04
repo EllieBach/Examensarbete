@@ -1,14 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 
 export default function MainMenuScreen({ navigation }) {
   
     const handleStartGame = async () => {
-        // Pause the music when starting the game
-        if (sound) {
-            await sound.pauseAsync();
-        }
         navigation.navigate('GameScreen');
     };
 
