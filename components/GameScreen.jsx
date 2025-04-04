@@ -15,15 +15,15 @@ import Matter from "matter-js";
 import Character from "./Character"; 
 import Physics from './physics';
 import { CameraSystem } from './CameraSystem';
-import Platform from './Platform'; 
+import SpikePatternSystem from './SpikePatternSystem';
 import Background from './Background'; 
 import InfiniteFloor from './InfiniteFloor';
-import Obstacle from './Obstacle';  // Make sure this is imported
-import Spike from './Spike';  // Add Spike import
+
 
 const gameSystem = (entities, { time, dispatch, touches, events }) => {
   const updatedEntities = Physics(entities, { time, events });
   controls(updatedEntities, { touches, dispatch });
+  SpikePatternSystem(updatedEntities, { time, dispatch });
   CameraSystem(updatedEntities);
   return updatedEntities;
 };
@@ -55,14 +55,14 @@ export default function GameScreen({ navigation }) {
     enableSleeping: false,
   });
   const world = engine.world;
-  world.gravity.y = 0;  // We'll handle gravity manually
+  //.gravity.y = 0;  // We'll handle gravity manually
 
   const platformY = screenHeight - 30;
   const initialPlatform = Matter.Bodies.rectangle(
     screenWidth / 2,
     platformY,
-    screenWidth * 30,  // Much wider platform
-    100,  // Taller platform
+    screenWidth * 30, 
+    100,
     {
       isStatic: true,
       friction: 0,
@@ -70,8 +70,8 @@ export default function GameScreen({ navigation }) {
       label: 'floor',
       chamfer: { radius: 0 },
       collisionFilter: {
-        category: 0x0001,
-        mask: 0xFFFF
+        category: 0x0001, 
+        mask: 0x0002   
       }
     }
   );
@@ -86,7 +86,6 @@ export default function GameScreen({ navigation }) {
       frictionAir: 0,
       restitution: 0,
       mass: 1,
-      density: 0.001,
       inertia: Infinity,
       label: 'character',
       collisionFilter: {
@@ -96,17 +95,16 @@ export default function GameScreen({ navigation }) {
     }
   );
 
-  // Ensure character stays upright
   Matter.Body.setInertia(character, Infinity);
   Matter.Body.setAngle(character, 0);
 
-  // Set initial velocity
+  
   Matter.Body.setVelocity(character, {
     x: 5,
     y: 0
   });
 
-  // Clean up physics engine on unmount
+  
   useEffect(() => {
     return () => {
       Matter.World.clear(world);
@@ -116,18 +114,18 @@ export default function GameScreen({ navigation }) {
 
   Matter.World.add(world, [character, initialPlatform]);
 
-  // Create camera first, with initial position
+
   const camera = { position: { x: 0, y: 0 } };
 
-  // Set up game objects
+
   const entities = {
     background: {
       renderer: Background,
       camera: camera,
-      zIndex: 0  // Draw first
+      zIndex: 0 
     },
     floor: {
-      body: initialPlatform,  // Add platform body to floor entity
+      body: initialPlatform,  
       renderer: InfiniteFloor,
       camera: camera,
       zIndex: 1
@@ -135,23 +133,23 @@ export default function GameScreen({ navigation }) {
     character: {
       body: character,
       size: [50, 50],
-      isGrounded: true,  // Add initial grounded state
+      isGrounded: true,  
       renderer: Character,
       camera: camera,
-      zIndex: 3  // Increased zIndex to ensure visibility
+      zIndex: 3  
     },
     camera: camera,
     physics: { 
       engine: engine, 
       world: world, 
       gameEngine: gameEngine,
-      lastSpawnTime: 0,  // Add this for obstacle spawning
-      obstacleCount: 0   // Add this for obstacle tracking
+      lastSpawnTime: 0,  
+      obstacleCount: 0   
     }
   };
 
   const handlePause = () => {
-    if (!isGameOver) {  // Only allow pause if game isn't over
+    if (!isGameOver) {  
       console.log("Pause button clicked!");
       setIsPaused(true);
     }
@@ -165,8 +163,7 @@ export default function GameScreen({ navigation }) {
   
   const handleJump = () => {
     if (!isPaused && gameEngine.current) {
-      console.log("Jump triggered");  // Debug log
-      gameEngine.current.dispatch({ type: "jump" });
+        gameEngine.current.dispatch({ type: "jump" });
     }
   };
 

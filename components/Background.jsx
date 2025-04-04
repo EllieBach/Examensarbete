@@ -3,15 +3,15 @@ import { StyleSheet, Dimensions, View } from 'react-native';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
-const BACKGROUND_WIDTH = windowWidth * 2;  // Make each segment wider
+const BACKGROUND_WIDTH = windowWidth * 2; 
 
 const Background = ({ camera }) => {
     if (!camera) return null;
 
-    // Calculate how many backgrounds we need and their positions
+   
     const cameraX = camera.position.x;
     const baseOffset = (cameraX * 0.6) % BACKGROUND_WIDTH;
-    const segments = 3;  // Number of background segments to render
+    const segments = 3; 
 
     return (
         <>

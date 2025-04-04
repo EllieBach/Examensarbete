@@ -5,55 +5,43 @@ const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 const FLOOR_Y = windowHeight - 85;
 
-// Adjusted constants for better physics
-const INITIAL_X = windowWidth / 3;
+const GROUND_CHECK_RADIUS = 0.2;
+const JUMP_FORCE = -5;
 const MOVE_SPEED = 5;
-const JUMP_FORCE = -15;
-const GRAVITY = 0.8;
-const MAX_FALL_SPEED = 15;
 
 function Physics(entities, { time, events = [] }) {
-    const { engine, world } = entities.physics;
+    const { engine } = entities.physics;
     const character = entities.character;
-    const floor = entities.floor;
     const camera = entities.camera;
 
     if (character?.body) {
-        // Ground detection with position check
-        const isGrounded = character.body.position.y >= FLOOR_Y;
+      
+        const charBottom = character.body.position.y + (character.size[1] / 2);
+        const isGrounded = Math.abs(charBottom - FLOOR_Y) <= GROUND_CHECK_RADIUS;
+
+        
         character.isGrounded = isGrounded;
 
-        // Jump handling
-        if (events.find(e => e.type === "jump")) {
-            console.log("Jump detected, isGrounded:", isGrounded);
-            if (isGrounded) {
-                console.log("Applying jump force");
-                Matter.Body.setVelocity(character.body, {
-                    x: MOVE_SPEED,
-                    y: JUMP_FORCE
-                });
-            }
+        if (events.find(e => e.type === "jump") && isGrounded) {
+            Matter.Body.applyForce(character.body, 
+                character.body.position, 
+                { x: 0, y: JUMP_FORCE }
+            );
         }
 
-        // Apply physics
-        if (!isGrounded) {
-            const newVelY = Math.min(character.body.velocity.y + GRAVITY, MAX_FALL_SPEED);
-            Matter.Body.setVelocity(character.body, {
-                x: MOVE_SPEED,
-                y: newVelY
-            });
-        } else {
+        // Keep horizontal movement and position synced
+        Matter.Body.setVelocity(character.body, {
+            x: MOVE_SPEED,
+            y: character.body.velocity.y
+        });
+
+        if (isGrounded) {
             Matter.Body.setPosition(character.body, {
-                x: camera.position.x + INITIAL_X,
+                x: camera.position.x + (windowWidth / 3),
                 y: FLOOR_Y
             });
-            Matter.Body.setVelocity(character.body, {
-                x: MOVE_SPEED,
-                y: 0
-            });
         }
 
-        // Update camera
         camera.position.x += MOVE_SPEED;
     }
 
